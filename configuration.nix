@@ -7,11 +7,13 @@
 
 let
   home-manager = builtins.fetchTarball "https://github.com/nix-community/home-manager/archive/master.tar.gz";
+  sops-nix = builtins.fetchTarball "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
 in
 {
   imports =
     [ # Include the results of the hardware scan.
       "${home-manager}/nixos"
+      "${sops-nix}/modules/sops"
       ./hardware-configuration.nix
     ];
 
@@ -99,6 +101,7 @@ in
     isNormalUser = true;
     description = "tbusby";
     extraGroups = [ "networkmanager" "wheel" ];
+    hashedPasswordFile = config.sops.secrets.tbusby_password.path;
     packages = with pkgs; [
       kdePackages.kate
     #  thunderbird
@@ -152,6 +155,8 @@ in
     gh
     python3
     nodejs
+    sops
+    age
     # ai
     (writeShellScriptBin "gemini" ''
       export npm_config_yes=true
@@ -199,7 +204,36 @@ in
   system.stateVersion = "25.05"; # Did you read the comment?
 
   home-manager.users.tbusby = import ./home.nix;
+
+  sops.defaultSopsFile = ./secrets/secrets.yaml;
+  sops.defaultSopsFormat = "yaml";
+  
+  sops.age.keyFile = "/var/lib/sops-nix/key.txt";
+  # This will automatically import host SSH keys as age keys
+  sops.age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+
+  sops.secrets.tbusby_password = {
+    neededForUsers = true;
+  };
+  
+  sops.secrets.wifi_psk = { };
+  sops.secrets.wifi_network = { };
+  
+  sops.templates."nm-connection.nmconnection" = {
+    content = ''
+      [connection]
+      id=${config.sops.placeholder.wifi_network}
+      type=wifi
+      
+      [wifi]
+      ssid=${config.sops.placeholder.wifi_network}
+      
+      [wifi-security]
+      key-mgmt=wpa-psk
+      psk=${config.sops.placeholder.wifi_psk}
+    '';
+    path = "/etc/NetworkManager/system-connections/sops-wifi.nmconnection";
+    mode = "0600";
+  };
  
-
-
 }
