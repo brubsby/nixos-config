@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   home.username = "tbusby";
   home.homeDirectory = "/home/tbusby";
@@ -69,6 +69,9 @@
       init = {
         defaultBranch = "main";
       };
+      push = {
+        autoSetupRemote = true;
+      };
       url = {
         "git@github.com:" = {
           insteadOf = "https://github.com/";
@@ -90,6 +93,17 @@
         "export TODO_ACTIONS_DIR=\" $TODO_DIR/.todo.actions.d\""
       ]
       (builtins.readFile "${pkgs.todo-txt-cli}/etc/todo/config");
+
+  home.activation.cloneRepos = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    export PATH="${pkgs.openssh}/bin:${pkgs.git-lfs}/bin:$PATH"
+    mkdir -p $HOME/Repos
+    if [ ! -d "$HOME/Repos/nixpkgs" ]; then
+      $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/brubsby/nixpkgs.git $HOME/Repos/nixpkgs
+    fi
+    if [ ! -d "$HOME/Repos/oeisdata" ]; then
+      $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/oeis/oeisdata.git $HOME/Repos/oeisdata
+    fi
+  '';
 
   home.stateVersion = "25.05";
 }

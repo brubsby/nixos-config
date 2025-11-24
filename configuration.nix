@@ -184,6 +184,7 @@ in
     git
     gh
     python3
+    uv
     nodejs
     sops
     age
