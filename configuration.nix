@@ -8,6 +8,20 @@
 let
   home-manager = builtins.fetchTarball "https://github.com/nix-community/home-manager/archive/master.tar.gz";
   sops-nix = builtins.fetchTarball "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
+
+  gemini = pkgs.writeShellScriptBin "gemini" ''
+    export npm_config_yes=true
+    exec ${pkgs.nodejs}/bin/npx @google/gemini-cli@nightly
+  '';
+
+  yafu = pkgs.callPackage "${builtins.fetchTarball "https://github.com/brubsby/nixpkgs/archive/yafu.tar.gz"}/pkgs/by-name/ya/yafu/package.nix" {
+    stdenv = pkgs.stdenv.override {
+      hostPlatform = pkgs.lib.systems.elaborate {
+        system = "x86_64-linux";
+        gcc.arch = "skylake";
+      };
+    };
+  };
 in
 {
   imports =
@@ -158,22 +172,12 @@ in
     sops
     age
     # ai
-    (writeShellScriptBin "gemini" ''
-      export npm_config_yes=true
-      exec ${nodejs}/bin/npx @google/gemini-cli@nightly
-    '')
+    gemini
     # math
     pari
     ecm
     mprime
-    (pkgs.callPackage "${builtins.fetchTarball "https://github.com/brubsby/nixpkgs/archive/yafu.tar.gz"}/pkgs/by-name/ya/yafu/package.nix" {
-      stdenv = pkgs.stdenv.override {
-        hostPlatform = pkgs.lib.systems.elaborate {
-          system = "x86_64-linux";
-          gcc.arch = "skylake";
-        };
-      };
-    })
+    yafu
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -205,35 +209,40 @@ in
 
   home-manager.users.tbusby = import ./home.nix;
 
-  sops.defaultSopsFile = ./secrets/secrets.yaml;
-  sops.defaultSopsFormat = "yaml";
-  
-  sops.age.keyFile = "/var/lib/sops-nix/key.txt";
-  # This will automatically import host SSH keys as age keys
-  sops.age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+  sops = {
+    defaultSopsFile = ./secrets/secrets.yaml;
+    defaultSopsFormat = "yaml";
 
-  sops.secrets.tbusby_password = {
-    neededForUsers = true;
-  };
-  
-  sops.secrets.wifi_psk = { };
-  sops.secrets.wifi_network = { };
-  
-  sops.templates."nm-connection.nmconnection" = {
-    content = ''
-      [connection]
-      id=${config.sops.placeholder.wifi_network}
-      type=wifi
-      
-      [wifi]
-      ssid=${config.sops.placeholder.wifi_network}
-      
-      [wifi-security]
-      key-mgmt=wpa-psk
-      psk=${config.sops.placeholder.wifi_psk}
-    '';
-    path = "/etc/NetworkManager/system-connections/sops-wifi.nmconnection";
-    mode = "0600";
+    age = {
+      keyFile = "/var/lib/sops-nix/key.txt";
+      sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+    };
+
+    secrets = {
+      tbusby_password = {
+        neededForUsers = true;
+      };
+      wifi_psk = { };
+      wifi_network = { };
+    };
+
+    templates."nm-connection.nmconnection" = {
+      content = ''
+        [connection]
+        id=${config.sops.placeholder.wifi_network}
+        type=wifi
+        
+        [wifi]
+        ssid=${config.sops.placeholder.wifi_network}
+        
+        [wifi-security]
+        key-mgmt=wpa-psk
+        psk=${config.sops.placeholder.wifi_psk}
+      '';
+      path = "/etc/NetworkManager/system-connections/sops-wifi.nmconnection";
+      mode = "0600";
+      restartUnits = [ "NetworkManager.service" ];
+    };
   };
  
 }

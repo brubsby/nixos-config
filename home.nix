@@ -1,6 +1,3 @@
-let
-  home-manager = builtins.fetchTarball "https://github.com/nix-community/home-manager/archive/master.tar.gz";
-in
 { pkgs, ... }: {
   home.username = "tbusby";
   home.homeDirectory = "/home/tbusby";
