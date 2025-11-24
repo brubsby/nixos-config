@@ -8,32 +8,45 @@
   ];
 
   home.sessionVariables = {
-    EDITOR = "nano";
-    GITHUB_TOKEN = "$(cat /run/user/$(id -u)/secrets/github_token)";
-  };
-
-  home.shellAliases = {
-    todo = "todo.sh";
-    clip = "xclip -sel clipboard";
-    nix-switch = "sudo nixos-rebuild switch --flake .#puter";
-    nix-update = "nix flake update && sudo nixos-rebuild switch --flake .#puter";
-    home-switch = "home-manager switch -f /etc/nixos/home.nix";
-    nix-config = "sudo $EDITOR /etc/nixos/configuration.nix";
-    home-config = "sudo $EDITOR /etc/nixos/home.nix";
+     EDITOR = "nano";
+     GITHUB_TOKEN = "$(cat /run/user/$(id -u)/secrets/github_token)";
   };
 
   programs.bash.enable = true;
 
-  programs.starship = {
+  programs.zsh = {
     enable = true;
-    # Custom settings
-    settings = {
-      add_newline = false;
-      aws.disabled = true;
-      gcloud.disabled = true;
-      line_break.disabled = true;
+    enableCompletion = true;
+    autosuggestion.enable = true;
+    syntaxHighlighting.enable = true;
+
+    shellAliases = {
+      todo = "todo.sh";
+      clip = "xclip -sel clipboard";
+      nix-switch = "sudo nixos-rebuild switch --flake .#puter";
+      nix-update = "nix flake update && sudo nixos-rebuild switch --flake .#puter";
+      home-switch = "home-manager switch -f /etc/nixos/home.nix";
+      nix-config = "sudo $EDITOR /etc/nixos/configuration.nix";
+      home-config = "sudo $EDITOR /etc/nixos/home.nix";
     };
+
+    plugins = [
+      {
+        name = "powerlevel10k";
+        src = pkgs.zsh-powerlevel10k;
+        file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
+      }
+    ];
+
+    initExtra = ''
+      # Powerlevel10k config
+      [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+    '';
   };
+
+  home.file.".p10k.zsh".source = ./p10k.zsh;
+  
+  # programs.starship = { ... } # Removed
 
   programs.git = {
     enable = true;
