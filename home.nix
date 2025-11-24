@@ -23,7 +23,6 @@
     shellAliases = {
       todo = "todo.sh";
       clip = "xclip -sel clipboard";
-      basement = "ssh tbusby@bub-ucs240m5";
       nix-switch = "sudo nixos-rebuild switch --flake .#puter";
       nix-update = "nix flake update && sudo nixos-rebuild switch --flake .#puter";
       home-switch = "home-manager switch -f /etc/nixos/home.nix";
@@ -47,6 +46,16 @@
 
   home.file.".p10k.zsh".source = ./p10k.zsh;
   
+  programs.ssh = {
+    enable = true;
+    matchBlocks = {
+      "basement" = {
+        hostname = "bub-ucs240m5";
+        user = "tbusby";
+      };
+    };
+  };
+
   # programs.starship = { ... } # Removed
 
   programs.git = {
