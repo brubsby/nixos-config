@@ -23,6 +23,7 @@
     shellAliases = {
       todo = "todo.sh";
       clip = "xclip -sel clipboard";
+      basement = "ssh tbusby@bub-ucs240m5";
       nix-switch = "sudo nixos-rebuild switch --flake .#puter";
       nix-update = "nix flake update && sudo nixos-rebuild switch --flake .#puter";
       home-switch = "home-manager switch -f /etc/nixos/home.nix";
