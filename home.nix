@@ -1,11 +1,5 @@
 { pkgs, ... }: 
-let
-  sops-nix = builtins.fetchTarball "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
-in
 {
-  imports = [
-    "${sops-nix}/modules/home-manager/sops.nix"
-  ];
   home.username = "tbusby";
   home.homeDirectory = "/home/tbusby";
 
@@ -21,7 +15,8 @@ in
   home.shellAliases = {
     todo = "todo.sh";
     clip = "xclip -sel clipboard";
-    nix-switch = "sudo nixos-rebuild switch";
+    nix-switch = "sudo nixos-rebuild switch --flake .#puter";
+    nix-update = "nix flake update && sudo nixos-rebuild switch --flake .#puter";
     home-switch = "home-manager switch -f /etc/nixos/home.nix";
     nix-config = "sudo $EDITOR /etc/nixos/configuration.nix";
     home-config = "sudo $EDITOR /etc/nixos/home.nix";

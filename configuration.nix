@@ -2,19 +2,16 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
 
 let
-  home-manager = builtins.fetchTarball "https://github.com/nix-community/home-manager/archive/master.tar.gz";
-  sops-nix = builtins.fetchTarball "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
-
   gemini = pkgs.writeShellScriptBin "gemini" ''
     export npm_config_yes=true
     exec ${pkgs.nodejs}/bin/npx @google/gemini-cli@nightly
   '';
 
-  yafu = pkgs.callPackage "${builtins.fetchTarball "https://github.com/brubsby/nixpkgs/archive/yafu.tar.gz"}/pkgs/by-name/ya/yafu/package.nix" {
+  yafu = pkgs.callPackage "${inputs.brubsby-nixpkgs}/pkgs/by-name/ya/yafu/package.nix" {
     stdenv = pkgs.stdenv.override {
       hostPlatform = pkgs.lib.systems.elaborate {
         system = "x86_64-linux";
@@ -26,8 +23,6 @@ in
 {
   imports =
     [ # Include the results of the hardware scan.
-      "${home-manager}/nixos"
-      "${sops-nix}/modules/sops"
       ./hardware-configuration.nix
     ];
 
@@ -132,6 +127,8 @@ in
     "nixos-test" "benchmark" "big-parallel" "kvm" 
     #"gccarch-skylake" 
   ];
+
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
   
   nixpkgs.hostPlatform = {
     #gcc.arch = "skylake";
@@ -217,8 +214,6 @@ in
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.05"; # Did you read the comment?
-
-  home-manager.users.tbusby = import ./home.nix;
 
   sops = {
     defaultSopsFile = ./secrets/secrets.yaml;
