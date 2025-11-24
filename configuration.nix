@@ -130,6 +130,12 @@ in
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 7d";
+  };
+
   nixpkgs.hostPlatform = {
     #gcc.arch = "skylake";
     #gcc.tune = "skylake";
@@ -188,7 +194,7 @@ in
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
+  services.openssh.enable = true;
 
   programs.ssh.knownHosts = {
     "github.com" = {
