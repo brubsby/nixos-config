@@ -5,4 +5,5 @@
   programs.yamlfmt.enable = true;
   programs.prettier.enable = true;
   programs.shfmt.enable = true;
+  settings.global.excludes = [ "secrets/secrets.yaml" ];
 }
