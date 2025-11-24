@@ -237,6 +237,10 @@ in
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.05"; # Did you read the comment?
 
+  systemd.tmpfiles.rules = [
+    "d /home/tbusby/.ssh 0700 tbusby users -"
+  ];
+
   sops = {
     defaultSopsFile = ./secrets/secrets.yaml;
     defaultSopsFormat = "yaml";
