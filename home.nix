@@ -8,8 +8,8 @@
   ];
 
   home.sessionVariables = {
-     EDITOR = "nano";
-     GITHUB_TOKEN = "$(cat /run/user/$(id -u)/secrets/github_token)";
+    EDITOR = "nano";
+    GITHUB_TOKEN = "$(cat /run/user/$(id -u)/secrets/github_token)";
   };
 
   programs.bash.enable = true;
@@ -45,7 +45,7 @@
   };
 
   home.file.".p10k.zsh".source = ./p10k.zsh;
-  
+
   programs.ssh = {
     enable = true;
     matchBlocks = {
@@ -60,6 +60,7 @@
 
   programs.git = {
     enable = true;
+    lfs.enable = true;
     settings = {
       user = {
         name = "brubsby";

@@ -208,7 +208,7 @@ in
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
-  
+
   programs.zsh.enable = true;
   users.users.tbusby.shell = pkgs.zsh;
 
@@ -222,7 +222,10 @@ in
       publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAfuCHKVTjquxvt6CM6tdG4SLp1Btn/nOeGdHEDZAxv0";
     };
     "bub-ucs240m5" = {
-      hostNames = [ "bub-ucs240m5" "192.168.86.33" ];
+      hostNames = [
+        "bub-ucs240m5"
+        "192.168.86.33"
+      ];
       publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHgHVy2geZWDIdDlqk8BWBFAh8jm/wZjKBUdND8ih/8Q";
     };
   };
