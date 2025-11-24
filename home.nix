@@ -1,4 +1,10 @@
 { pkgs, lib, ... }:
+let
+  repos = [
+    "brubsby/nixpkgs"
+    "oeis/oeisdata"
+  ];
+in
 {
   home.username = "tbusby";
   home.homeDirectory = "/home/tbusby";
@@ -48,6 +54,7 @@
 
   programs.ssh = {
     enable = true;
+    enableDefaultConfig = false;
     matchBlocks = {
       "basement" = {
         hostname = "bub-ucs240m5";
@@ -97,12 +104,19 @@
   home.activation.cloneRepos = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     export PATH="${pkgs.openssh}/bin:${pkgs.git-lfs}/bin:$PATH"
     mkdir -p $HOME/Repos
-    if [ ! -d "$HOME/Repos/nixpkgs" ]; then
-      $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/brubsby/nixpkgs.git $HOME/Repos/nixpkgs
-    fi
-    if [ ! -d "$HOME/Repos/oeisdata" ]; then
-      $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/oeis/oeisdata.git $HOME/Repos/oeisdata
-    fi
+    ${builtins.concatStringsSep "\n" (
+      map (
+        repo:
+        let
+          name = builtins.elemAt (lib.splitString "/" repo) 1;
+        in
+        ''
+          if [ ! -d "$HOME/Repos/${name}" ]; then
+            $DRY_RUN_CMD ${pkgs.git}/bin/git clone https://github.com/${repo}.git $HOME/Repos/${name}
+          fi
+        ''
+      ) repos
+    )}
   '';
 
   home.stateVersion = "25.05";
