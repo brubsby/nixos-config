@@ -2,8 +2,12 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, inputs, ... }:
-
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
 
 let
   gemini = pkgs.writeShellScriptBin "gemini" ''
@@ -21,10 +25,10 @@ let
   };
 in
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+  ];
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -35,7 +39,7 @@ in
 
   networking.hostName = "puter"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-  
+
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
@@ -109,11 +113,14 @@ in
   users.users.tbusby = {
     isNormalUser = true;
     description = "tbusby";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+    ];
     hashedPasswordFile = config.sops.secrets.tbusby_password.path;
     packages = with pkgs; [
       kdePackages.kate
-    #  thunderbird
+      #  thunderbird
     ];
   };
 
@@ -124,12 +131,18 @@ in
   nixpkgs.config.allowUnfree = true;
 
   nix.settings.system-features = [
-    "nixos-test" "benchmark" "big-parallel" "kvm" 
-    #"gccarch-skylake" 
+    "nixos-test"
+    "benchmark"
+    "big-parallel"
+    "kvm"
+    #"gccarch-skylake"
   ];
 
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
+
   nix.gc = {
     automatic = true;
     dates = "weekly";
@@ -150,8 +163,8 @@ in
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-  #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-  #  wget
+    #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+    #  wget
     # normie
     google-chrome
     discord
@@ -250,10 +263,10 @@ in
         [connection]
         id=${config.sops.placeholder.wifi_network}
         type=wifi
-        
+
         [wifi]
         ssid=${config.sops.placeholder.wifi_network}
-        
+
         [wifi-security]
         key-mgmt=wpa-psk
         psk=${config.sops.placeholder.wifi_psk}
@@ -263,5 +276,5 @@ in
       restartUnits = [ "NetworkManager.service" ];
     };
   };
- 
+
 }

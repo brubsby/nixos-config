@@ -1,4 +1,4 @@
-{ pkgs, ... }: 
+{ pkgs, ... }:
 {
   home.username = "tbusby";
   home.homeDirectory = "/home/tbusby";
@@ -8,8 +8,8 @@
   ];
 
   home.sessionVariables = {
-     EDITOR = "nano";
-     GITHUB_TOKEN = "$(cat /run/user/$(id -u)/secrets/github_token)";
+    EDITOR = "nano";
+    GITHUB_TOKEN = "$(cat /run/user/$(id -u)/secrets/github_token)";
   };
 
   home.shellAliases = {
@@ -42,19 +42,19 @@
     };
   };
 
-  home.file.".todo/config".text = builtins.replaceStrings
-    [
-      "export TODO_DIR=\${HOME:-$USERPROFILE}"
-      "# export TODOTXT_FINAL_FILTER='cat'"
-      "#export TODO_ACTIONS_DIR=\" $HOME/.todo.actions.d\""
-    ]
-    [
-      "export TODO_DIR=$HOME/Dropbox/todo"
-      "export TODOTXT_FINAL_FILTER=\" $TODO_DIR/futureTask\""
-      "export TODO_ACTIONS_DIR=\" $TODO_DIR/.todo.actions.d\""
-    ]
-    (builtins.readFile "${pkgs.todo-txt-cli}/etc/todo/config");
-
+  home.file.".todo/config".text =
+    builtins.replaceStrings
+      [
+        "export TODO_DIR=\${HOME:-$USERPROFILE}"
+        "# export TODOTXT_FINAL_FILTER='cat'"
+        "#export TODO_ACTIONS_DIR=\" $HOME/.todo.actions.d\""
+      ]
+      [
+        "export TODO_DIR=$HOME/Dropbox/todo"
+        "export TODOTXT_FINAL_FILTER=\" $TODO_DIR/futureTask\""
+        "export TODO_ACTIONS_DIR=\" $TODO_DIR/.todo.actions.d\""
+      ]
+      (builtins.readFile "${pkgs.todo-txt-cli}/etc/todo/config");
 
   home.stateVersion = "25.05";
 }
