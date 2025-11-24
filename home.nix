@@ -1,4 +1,11 @@
-{ pkgs, ... }: {
+{ pkgs, ... }: 
+let
+  sops-nix = builtins.fetchTarball "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
+in
+{
+  imports = [
+    "${sops-nix}/modules/home-manager/sops.nix"
+  ];
   home.username = "tbusby";
   home.homeDirectory = "/home/tbusby";
 
@@ -8,6 +15,7 @@
 
   home.sessionVariables = {
      EDITOR = "nano";
+     GITHUB_TOKEN = "$(cat /run/user/$(id -u)/secrets/github_token)";
   };
 
   home.shellAliases = {
@@ -30,6 +38,11 @@
       };
       init = {
         defaultBranch = "main";
+      };
+      url = {
+        "git@github.com:" = {
+          insteadOf = "https://github.com/";
+        };
       };
     };
   };
