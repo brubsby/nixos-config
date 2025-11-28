@@ -15,7 +15,7 @@ let
     exec ${pkgs.nodejs}/bin/npx @google/gemini-cli@nightly
   '';
 
-  yafu = pkgs.callPackage "${inputs.brubsby-nixpkgs}/pkgs/by-name/ya/yafu/package.nix" {
+  yafu = pkgs.callPackage "${inputs.brubsby-nixpkgs-local}/pkgs/by-name/ya/yafu/package.nix" {
     stdenv = pkgs.stdenv.override {
       hostPlatform = pkgs.lib.systems.elaborate {
         system = "x86_64-linux";

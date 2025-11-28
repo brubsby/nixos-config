@@ -8,7 +8,8 @@
     sops-nix.url = "github:Mic92/sops-nix";
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
-    brubsby-nixpkgs.url = "github:brubsby/nixpkgs/yafu";
+    brubsby-nixpkgs-local.url = "path:/home/tbusby/Repos/nixpkgs";
+    brubsby-nixpkgs-github-yafu.url = "github:brubsby/nixpkgs/yafu";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
   };

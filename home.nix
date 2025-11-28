@@ -11,6 +11,7 @@ in
 
   home.packages = [
     pkgs.todo-txt-cli
+    pkgs.neovim
   ];
 
   home.sessionVariables = {
@@ -29,8 +30,9 @@ in
     shellAliases = {
       todo = "todo.sh";
       clip = "xclip -sel clipboard";
-      nix-switch = "sudo nixos-rebuild switch --flake .#puter";
-      nix-update = "nix flake update && sudo nixos-rebuild switch --flake .#puter";
+      nix-switch = "sudo nixos-rebuild switch --flake /etc/nixos#puter";
+      nix-update = "nix flake update --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos#puter";
+      nix-update-local = "sudo nix flake update brubsby-nixpkgs-local --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos#puter";
       home-switch = "home-manager switch -f /etc/nixos/home.nix";
       nix-config = "sudo $EDITOR /etc/nixos/configuration.nix";
       home-config = "sudo $EDITOR /etc/nixos/home.nix";
@@ -120,4 +122,5 @@ in
   '';
 
   home.stateVersion = "25.05";
+  home.enableNixpkgsReleaseCheck = false;
 }
