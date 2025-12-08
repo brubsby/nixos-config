@@ -8,10 +8,11 @@ in
 {
   home.username = "tbusby";
   home.homeDirectory = "/home/tbusby";
-
   home.packages = [
     pkgs.todo-txt-cli
     pkgs.neovim
+    pkgs.snapshot
+    #pkgs.ripcord
   ];
 
   home.sessionVariables = {
@@ -36,6 +37,15 @@ in
       home-switch = "home-manager switch -f /etc/nixos/home.nix";
       nix-config = "sudo $EDITOR /etc/nixos/configuration.nix";
       home-config = "sudo $EDITOR /etc/nixos/home.nix";
+      gs = "git status";
+      gsv = "git status -v";
+      gsvv = "git status -v -v";
+      gl = "git log";
+      gd = "git diff";
+      ga = "git add";
+      gc = "git commit";
+      gp = "git push";
+      beancount = "cd ~/Dropbox/Finances/Beancount && ./beancount_reference.sh";
     };
 
     plugins = [
@@ -94,12 +104,12 @@ in
       [
         "export TODO_DIR=\${HOME:-$USERPROFILE}"
         "# export TODOTXT_FINAL_FILTER='cat'"
-        "#export TODO_ACTIONS_DIR=\" $HOME/.todo.actions.d\""
+        "#export TODO_ACTIONS_DIR=\"$HOME/.todo.actions.d\""
       ]
       [
         "export TODO_DIR=$HOME/Dropbox/todo"
         "export TODOTXT_FINAL_FILTER=\" $TODO_DIR/futureTask\""
-        "export TODO_ACTIONS_DIR=\" $TODO_DIR/.todo.actions.d\""
+        "export TODO_ACTIONS_DIR=\"$TODO_DIR/.todo.actions.d\""
       ]
       (builtins.readFile "${pkgs.todo-txt-cli}/etc/todo/config");
 

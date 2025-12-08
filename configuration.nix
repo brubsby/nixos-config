@@ -16,12 +16,8 @@ let
   '';
 
   yafu = pkgs.callPackage "${inputs.brubsby-nixpkgs-local}/pkgs/by-name/ya/yafu/package.nix" {
-    stdenv = pkgs.stdenv.override {
-      hostPlatform = pkgs.lib.systems.elaborate {
-        system = "x86_64-linux";
-        gcc.arch = "skylake";
-      };
-    };
+    enableAvx2 = true;
+    enableBmi2 = true;
   };
 in
 {
@@ -180,16 +176,23 @@ in
     # nix
     nix-search-cli
     pkgs.home-manager
+    sops
+    age
     # code
     git
+    gcc
+    gdb
+    gnumake
     gh
     python3
     uv
     nodejs
-    sops
-    age
+    prettier
+    # office
+    beancount
     # ai
     gemini
+    opencode
     # math
     pari
     ecm
