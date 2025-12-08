@@ -163,7 +163,6 @@ in
     #  wget
     # normie
     google-chrome
-    discord
     dropbox-cli
     vlc
     obsidian

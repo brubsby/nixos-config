@@ -12,6 +12,7 @@
     brubsby-nixpkgs-github-yafu.url = "github:brubsby/nixpkgs/yafu";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
+    nixcord.url = "github:FlameFlag/nixcord";
   };
 
   outputs =
@@ -21,6 +22,7 @@
       sops-nix,
       nixos-hardware,
       treefmt-nix,
+      nixcord,
       ...
     }:
     let
@@ -41,6 +43,7 @@
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.users.tbusby = import ./home.nix;
+              home-manager.sharedModules = [ inputs.nixcord.homeModules.nixcord ];
             }
           ];
         };

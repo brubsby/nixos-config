@@ -6,13 +6,14 @@ let
   ];
 in
 {
+  nixpkgs.config.allowUnfree = true;
+
   home.username = "tbusby";
   home.homeDirectory = "/home/tbusby";
   home.packages = [
     pkgs.todo-txt-cli
     pkgs.neovim
     pkgs.snapshot
-    #pkgs.ripcord
   ];
 
   home.sessionVariables = {
@@ -75,8 +76,6 @@ in
     };
   };
 
-  # programs.starship = { ... } # Removed
-
   programs.git = {
     enable = true;
     lfs.enable = true;
@@ -97,6 +96,12 @@ in
         };
       };
     };
+  };
+
+  programs.nixcord = {
+    enable = true;
+    discord.enable = true;
+    vesktop.enable = true;
   };
 
   home.file.".todo/config".text =
