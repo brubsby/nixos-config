@@ -49,6 +49,19 @@
         };
       };
 
+      homeConfigurations = {
+        tbusby = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [
+            ./home.nix
+            inputs.nixcord.homeModules.nixcord
+            {
+              nixpkgs.config.allowUnfree = true;
+            }
+          ];
+        };
+      };
+
       formatter.${system} = treefmtEval.config.build.wrapper;
     };
 }

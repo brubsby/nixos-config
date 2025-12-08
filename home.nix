@@ -6,8 +6,6 @@ let
   ];
 in
 {
-  nixpkgs.config.allowUnfree = true;
-
   home.username = "tbusby";
   home.homeDirectory = "/home/tbusby";
   home.packages = [
@@ -35,7 +33,7 @@ in
       nix-switch = "sudo nixos-rebuild switch --flake /etc/nixos#puter";
       nix-update = "nix flake update --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos#puter";
       nix-update-local = "sudo nix flake update brubsby-nixpkgs-local --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos#puter";
-      home-switch = "home-manager switch -f /etc/nixos/home.nix";
+      home-switch = "home-manager switch --flake /etc/nixos#tbusby";
       nix-config = "sudo $EDITOR /etc/nixos/configuration.nix";
       home-config = "sudo $EDITOR /etc/nixos/home.nix";
       gs = "git status";
