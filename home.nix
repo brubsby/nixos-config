@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, inputs, ... }:
 let
   repos = [
     "brubsby/nixpkgs"
@@ -16,10 +16,7 @@ in
 
   home.sessionVariables = {
     EDITOR = "nano";
-    GITHUB_TOKEN = "$(cat /run/user/$(id -u)/secrets/github_token)";
   };
-
-  programs.bash.enable = true;
 
   programs.zsh = {
     enable = true;
@@ -31,11 +28,12 @@ in
       todo = "todo.sh";
       clip = "xclip -sel clipboard";
       nix-switch = "sudo nixos-rebuild switch --flake /etc/nixos#puter";
-      nix-update = "nix flake update --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos#puter";
+      nix-update = "sudo nix flake update --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos#puter";
       nix-update-local = "sudo nix flake update brubsby-nixpkgs-local --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos#puter";
       home-switch = "home-manager switch --flake /etc/nixos#tbusby";
-      nix-config = "sudo $EDITOR /etc/nixos/configuration.nix";
-      home-config = "sudo $EDITOR /etc/nixos/home.nix";
+      nix-config = "$EDITOR /home/tbusby/Repos/nixos-config/configuration.nix";
+      home-config = "$EDITOR /home/tbusby/Repos/nixos-config/home.nix";
+      flake-config = "$EDITOR /home/tbusby/Repos/nixos-config/flake.nix";
       gs = "git status";
       gsv = "git status -v";
       gsvv = "git status -v -v";
@@ -58,6 +56,12 @@ in
     initContent = ''
       # Powerlevel10k config
       [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+      
+      export GITHUB_TOKEN="$(cat /run/secrets/github_token)"
+      export DISCORDO_TOKEN="$(cat /run/secrets/discord_token)"
+      export HUCKLEBERRY_EMAIL="$(cat /run/secrets/huckleberry_email)"
+      export HUCKLEBERRY_PASSWORD="$(cat /run/secrets/huckleberry_password)"
+      export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.zlib}/lib:$LD_LIBRARY_PATH"
     '';
   };
 
@@ -133,6 +137,12 @@ in
       ) repos
     )}
   '';
+
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+    enableZshIntegration = true;
+  };
 
   home.stateVersion = "25.05";
   home.enableNixpkgsReleaseCheck = false;

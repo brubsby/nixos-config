@@ -43,7 +43,9 @@
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.users.tbusby = import ./home.nix;
-              home-manager.sharedModules = [ inputs.nixcord.homeModules.nixcord ];
+              home-manager.sharedModules = [
+                inputs.nixcord.homeModules.nixcord
+              ];
             }
           ];
         };

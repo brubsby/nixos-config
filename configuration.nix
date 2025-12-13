@@ -14,7 +14,6 @@ let
     export npm_config_yes=true
     exec ${pkgs.nodejs}/bin/npx @google/gemini-cli@nightly
   '';
-
   yafu = pkgs.callPackage "${inputs.brubsby-nixpkgs-local}/pkgs/by-name/ya/yafu/package.nix" {
     enableAvx2 = true;
     enableBmi2 = true;
@@ -166,6 +165,8 @@ in
     dropbox-cli
     vlc
     obsidian
+    # tui
+    discordo
     # games
     # dwarf-fortress-packages.dwarf-fortress-full
     # linux
@@ -239,6 +240,13 @@ in
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
+  # Enable nix-ld to run unpatched dynamic binaries (like Python wheels)
+  programs.nix-ld.enable = true;
+  programs.nix-ld.libraries = with pkgs; [
+    stdenv.cc.cc.lib
+    zlib
+  ];
+
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
@@ -271,6 +279,15 @@ in
         path = "/home/tbusby/.ssh/id_ed25519";
       };
       github_token = {
+        owner = "tbusby";
+      };
+      discord_token = {
+        owner = "tbusby";
+      };
+      huckleberry_email = {
+        owner = "tbusby";
+      };
+      huckleberry_password = {
         owner = "tbusby";
       };
     };
