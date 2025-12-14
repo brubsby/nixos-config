@@ -167,12 +167,14 @@ in
     obsidian
     # tui
     discordo
+    spotify-player
     # games
     # dwarf-fortress-packages.dwarf-fortress-full
     # linux
     xclip
     htop
     fastfetch
+    jq
     # nix
     nix-search-cli
     pkgs.home-manager
@@ -288,6 +290,15 @@ in
         owner = "tbusby";
       };
       huckleberry_password = {
+        owner = "tbusby";
+      };
+      "spotify_credentials/username" = {
+        owner = "tbusby";
+      };
+      "spotify_credentials/auth_type" = {
+        owner = "tbusby";
+      };
+      "spotify_credentials/auth_data" = {
         owner = "tbusby";
       };
     };

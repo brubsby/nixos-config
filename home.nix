@@ -120,6 +120,14 @@ in
       ]
       (builtins.readFile "${pkgs.todo-txt-cli}/etc/todo/config");
 
+  home.activation.setupSpotifyCredentials = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if [ ! -f $HOME/.cache/spotify-player/credentials.json ]; then
+      mkdir -p $HOME/.cache/spotify-player
+      echo "{\"username\":\"$(cat /run/secrets/spotify_credentials/username)\",\"auth_type\":$(cat /run/secrets/spotify_credentials/auth_type),\"auth_data\":\"$(cat /run/secrets/spotify_credentials/auth_data)\"}" > $HOME/.cache/spotify-player/credentials.json
+      chmod 600 $HOME/.cache/spotify-player/credentials.json
+    fi
+  '';
+
   home.activation.cloneRepos = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     export PATH="${pkgs.openssh}/bin:${pkgs.git-lfs}/bin:$PATH"
     mkdir -p $HOME/Repos
