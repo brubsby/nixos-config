@@ -1,4 +1,4 @@
-{ pkgs, lib, inputs, ... }:
+{ pkgs, lib, config, inputs, ... }:
 let
   repos = [
     "brubsby/nixpkgs"
@@ -10,12 +10,12 @@ in
   home.homeDirectory = "/home/tbusby";
   home.packages = [
     pkgs.todo-txt-cli
-    pkgs.neovim
     pkgs.snapshot
+    pkgs.hack-font
   ];
 
   home.sessionVariables = {
-    EDITOR = "nano";
+    EDITOR = "nvim";
   };
 
   programs.zsh = {
@@ -27,13 +27,14 @@ in
     shellAliases = {
       todo = "todo.sh";
       clip = "xclip -sel clipboard";
-      nix-switch = "sudo nixos-rebuild switch --flake /etc/nixos#puter";
-      nix-update = "sudo nix flake update --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos#puter";
-      nix-update-local = "sudo nix flake update brubsby-nixpkgs-local --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos#puter";
+      nixos-switch = "sudo nixos-rebuild switch --flake /etc/nixos#puter";
+      nixos-update = "sudo nix flake update --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos#puter";
+      nixos-update-local = "sudo nix flake update brubsby-nixpkgs-local --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos#puter";
       home-switch = "home-manager switch --flake /etc/nixos#tbusby";
-      nix-config = "$EDITOR /home/tbusby/Repos/nixos-config/configuration.nix";
+      nixos-config = "$EDITOR /home/tbusby/Repos/nixos-config/configuration.nix";
       home-config = "$EDITOR /home/tbusby/Repos/nixos-config/home.nix";
       flake-config = "$EDITOR /home/tbusby/Repos/nixos-config/flake.nix";
+      beancount = "cd ~/Dropbox/Finances/Beancount && ./beancount_reference.sh";
       gs = "git status";
       gsv = "git status -v";
       gsvv = "git status -v -v";
@@ -41,8 +42,6 @@ in
       gd = "git diff";
       ga = "git add";
       gc = "git commit";
-      gp = "git push";
-      beancount = "cd ~/Dropbox/Finances/Beancount && ./beancount_reference.sh";
     };
 
     plugins = [
@@ -61,7 +60,139 @@ in
       export DISCORDO_TOKEN="$(cat /run/secrets/discord_token)"
       export HUCKLEBERRY_EMAIL="$(cat /run/secrets/huckleberry_email)"
       export HUCKLEBERRY_PASSWORD="$(cat /run/secrets/huckleberry_password)"
+      export LEETCODE_CSRF="$(cat /run/secrets/leetcode_credentials/csrf_token)"
+      export LEETCODE_SESSION="$(cat /run/secrets/leetcode_credentials/session_key)"
       export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.zlib}/lib:$LD_LIBRARY_PATH"
+      export PATH="$HOME/.cargo/bin:$PATH"
+    '';
+  };
+
+  programs.neovim = {
+    enable = true;
+    defaultEditor = true;
+    viAlias = true;
+    vimAlias = true;
+    plugins = with pkgs.vimPlugins; [
+      nvim-lspconfig
+      nvim-cmp
+      cmp-nvim-lsp
+      cmp-buffer
+      cmp-path
+      luasnip
+      cmp_luasnip
+      rustaceanvim
+      nvim-treesitter.withAllGrammars
+      plenary-nvim
+      telescope-nvim
+    ];
+    extraLuaConfig = ''
+      local cmp = require('cmp')
+      local luasnip = require('luasnip')
+
+      -- Telescope keybinds
+      local builtin = require('telescope.builtin')
+      vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Telescope find files' })
+      vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Telescope live grep' })
+      vim.keymap.set('n', '<leader>fb', builtin.buffers, { desc = 'Telescope buffers' })
+      vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = 'Telescope help tags' })
+      vim.keymap.set('n', '<leader>fk', builtin.keymaps, { desc = 'Telescope keymaps' })
+
+      -- Diagnostic keybinds
+      vim.keymap.set('n', 'gl', vim.diagnostic.open_float, { desc = 'Open diagnostic float' })
+      vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic' })
+      vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic' })
+
+      -- Show diagnostics on hover automatically
+      vim.api.nvim_create_autocmd("CursorHold", {
+        callback = function()
+          vim.diagnostic.open_float(nil, { focusable = false })
+        end
+      })
+      vim.opt.updatetime = 300 -- Faster hover (default is 4000ms)
+
+      cmp.setup({
+        snippet = {
+          expand = function(args)
+            luasnip.lsp_expand(args.body)
+          end,
+        },
+        mapping = cmp.mapping.preset.insert({
+          ['<C-d>'] = cmp.mapping.scroll_docs(-4),
+          ['<C-f>'] = cmp.mapping.scroll_docs(4),
+          ['<C-Space>'] = cmp.mapping.complete(),
+          ['<CR>'] = cmp.mapping.confirm({
+            behavior = cmp.ConfirmBehavior.Replace,
+            select = true,
+          }),
+          ['<Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_next_item()
+            elseif luasnip.expand_or_jumpable() then
+              luasnip.expand_or_jump()
+            else
+              fallback()
+            end
+          end, { 'i', 's' }),
+          ['<S-Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_prev_item()
+            elseif luasnip.jumpable(-1) then
+              luasnip.jump(-1)
+            else
+              fallback()
+            end
+          end, { 'i', 's' }),
+        }),
+        sources = cmp.config.sources({
+          { name = 'nvim_lsp' },
+          { name = 'luasnip' },
+        }, {
+          { name = 'buffer' },
+          { name = 'path' },
+        })
+      })
+
+      -- rustaceanvim
+      vim.g.rustaceanvim = {
+        server = {
+          on_attach = function(client, bufnr)
+            local opts = { buffer = bufnr }
+            vim.keymap.set('n', 'K', function() vim.cmd.RustLsp { 'hover', 'actions' } end, opts)
+            vim.keymap.set('n', 'gp', function() vim.cmd.RustLsp('expandMacro') end, opts)
+            vim.keymap.set('n', '<leader>a', function() vim.cmd.RustLsp('codeAction') end, opts)
+            vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+          end,
+          default_settings = {
+            ['rust-analyzer'] = {
+              procMacro = {
+                enable = true,
+              },
+              cargo = {
+                buildScripts = {
+                  enable = true,
+                },
+              },
+              checkOnSave = true,
+              check = {
+                command = "clippy", -- More thorough than "check"
+              },
+              diagnostics = {
+                debounceInterval = 200, -- Wait 200ms after typing stops before re-checking
+              },
+            },
+          },
+        },
+      }
+
+      -- Treesitter
+      require('nvim-treesitter.configs').setup({
+        highlight = {
+          enable = true,
+        },
+      })
+
+      -- ty LSP (Neovim 0.11+)
+      vim.lsp.enable('ty')
     '';
   };
 
@@ -123,9 +254,33 @@ in
   home.activation.setupSpotifyCredentials = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     if [ ! -f $HOME/.cache/spotify-player/credentials.json ]; then
       mkdir -p $HOME/.cache/spotify-player
-      echo "{\"username\":\"$(cat /run/secrets/spotify_credentials/username)\",\"auth_type\":$(cat /run/secrets/spotify_credentials/auth_type),\"auth_data\":\"$(cat /run/secrets/spotify_credentials/auth_data)\"}" > $HOME/.cache/spotify-player/credentials.json
+      echo "{\"username\":\"$(cat /run/secrets/spotify_credentials/username)\",\"auth_type\":$(cat /run/secrets/spotify_credentials/auth_data),\"auth_data\":\"$(cat /run/secrets/spotify_credentials/auth_data)\"}" > $HOME/.cache/spotify-player/credentials.json
       chmod 600 $HOME/.cache/spotify-player/credentials.json
     fi
+  '';
+
+  home.activation.setupLeetcodeConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    mkdir -p $HOME/.leetcode
+    cat <<EOF > $HOME/.leetcode/leetcode.toml
+[code]
+lang = "python"
+editor = "${config.home.sessionVariables.EDITOR}"
+comment_problem_desc = true
+comment_leading = "#"
+test = true
+
+[cookies]
+csrf = "\$(cat /run/secrets/leetcode_credentials/csrf_token)"
+session = "\$(cat /run/secrets/leetcode_credentials/session_key)"
+site = "leetcode.com"
+
+[storage]
+cache = 'Problems'
+code = 'code'
+root = '$HOME/.leetcode'
+scripts = 'scripts'
+EOF
+    chmod 600 $HOME/.leetcode/leetcode.toml
   '';
 
   home.activation.cloneRepos = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -146,10 +301,53 @@ in
     )}
   '';
 
+  programs.spotify-player = {
+    enable = true;
+    settings = {
+      enable_notify = false;
+    };
+  };
+
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
     enableZshIntegration = true;
+  };
+
+  programs.tmux = {
+    enable = true;
+    mouse = true;
+    keyMode = "vi";
+    # aggressiveResize = true; -- Disabled to prevent potential issues with multiple clients
+    baseIndex = 1;
+    escapeTime = 0;
+  };
+
+  programs.zellij = {
+    enable = true;
+    enableZshIntegration = true;
+    settings = {
+      theme = "dracula";
+    };
+  };
+
+  programs.konsole = {
+    enable = true;
+    defaultProfile = "tbusby";
+    profiles.tbusby = {
+      colorScheme = "Breeze";
+      font = {
+        name = "Hack";
+        size = 12;
+      };
+    };
+    extraConfig = {
+      MainWindow = {
+        MenuBar = "Disabled";
+        ShowMainToolBar = false;
+        ShowSessionToolBar = false;
+      };
+    };
   };
 
   home.stateVersion = "25.05";

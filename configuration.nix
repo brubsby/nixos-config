@@ -10,14 +10,35 @@
 }:
 
 let
-  gemini = pkgs.writeShellScriptBin "gemini" ''
+  gemini-nightly = pkgs.writeShellScriptBin "gemini-nightly" ''
     export npm_config_yes=true
     exec ${pkgs.nodejs}/bin/npx @google/gemini-cli@nightly
   '';
-  yafu = pkgs.callPackage "${inputs.brubsby-nixpkgs-local}/pkgs/by-name/ya/yafu/package.nix" {
+  gemini-preview = pkgs.writeShellScriptBin "gemini-preview" ''
+    export npm_config_yes=true
+    exec ${pkgs.nodejs}/bin/npx @google/gemini-cli@preview
+  '';
+  gemini-latest = pkgs.writeShellScriptBin "gemini-latest" ''
+    export npm_config_yes=true
+    exec ${pkgs.nodejs}/bin/npx @google/gemini-cli@latest
+  '';
+  gemini = pkgs.writeShellScriptBin "gemini" ''
+    export npm_config_yes=true
+    exec ${pkgs.nodejs}/bin/npx @google/gemini-cli
+  '';
+  qwen = pkgs.writeShellScriptBin "qwen" ''
+    export npm_config_yes=true
+    exec ${pkgs.nodejs}/bin/npx @qwen-code/qwen-code@latest
+  '';
+  yafu = pkgs.callPackage "${inputs.brubsby-nixpkgs-yafu}/pkgs/by-name/ya/yafu/package.nix" {
     enableAvx2 = true;
     enableBmi2 = true;
   };
+  brubsbyPkgs = import inputs.brubsby-nixpkgs-local {
+    inherit (pkgs) system;
+    config = { allowUnfree = true; };
+  };
+  pfgw = brubsbyPkgs.pfgw;
 in
 {
   imports = [
@@ -78,7 +99,10 @@ in
   services.xserver.xkb = {
     layout = "us";
     variant = "";
+    options = "caps:escape";
   };
+
+  console.useXkbConfig = true;
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
@@ -162,44 +186,61 @@ in
     #  wget
     # normie
     google-chrome
-    dropbox-cli
     vlc
     obsidian
     # tui
     discordo
-    spotify-player
-    # games
-    # dwarf-fortress-packages.dwarf-fortress-full
+    # cli
+    leetcode-cli
+    dropbox-cli
     # linux
     xclip
     htop
     fastfetch
+    bat
     jq
+    unzip
     # nix
     nix-search-cli
+    nix-update
     pkgs.home-manager
     sops
     age
     # code
     git
+    gh
     gcc
     gdb
     gnumake
-    gh
+    ty
+     #python
     python3
     uv
+     #js
     nodejs
     prettier
+     #rust
+    cargo
+    rustc
+    rustfmt
+    clippy
+    rust-analyzer
     # office
     beancount
     # ai
     gemini
+    gemini-nightly
+    gemini-preview
+    gemini-latest
     opencode
+    qwen
     # math
     pari
     ecm
     mprime
     yafu
+    #pfgw
+    golly
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -299,6 +340,12 @@ in
         owner = "tbusby";
       };
       "spotify_credentials/auth_data" = {
+        owner = "tbusby";
+      };
+      "leetcode_credentials/csrf_token" = {
+        owner = "tbusby";
+      };
+      "leetcode_credentials/session_key" = {
         owner = "tbusby";
       };
     };
