@@ -12,23 +12,15 @@
 let
   gemini-nightly = pkgs.writeShellScriptBin "gemini-nightly" ''
     export npm_config_yes=true
-    exec ${pkgs.nodejs}/bin/npx @google/gemini-cli@nightly
+    exec ${pkgs.nodejs}/bin/npx @google/gemini-cli@nightly "$@"
   '';
   gemini-preview = pkgs.writeShellScriptBin "gemini-preview" ''
     export npm_config_yes=true
-    exec ${pkgs.nodejs}/bin/npx @google/gemini-cli@preview
-  '';
-  gemini-latest = pkgs.writeShellScriptBin "gemini-latest" ''
-    export npm_config_yes=true
-    exec ${pkgs.nodejs}/bin/npx @google/gemini-cli@latest
-  '';
-  gemini = pkgs.writeShellScriptBin "gemini" ''
-    export npm_config_yes=true
-    exec ${pkgs.nodejs}/bin/npx @google/gemini-cli
+    exec ${pkgs.nodejs}/bin/npx @google/gemini-cli@preview "$@"
   '';
   qwen = pkgs.writeShellScriptBin "qwen" ''
     export npm_config_yes=true
-    exec ${pkgs.nodejs}/bin/npx @qwen-code/qwen-code@latest
+    exec ${pkgs.nodejs}/bin/npx @qwen-code/qwen-code@latest "$@"
   '';
   yafu = pkgs.callPackage "${inputs.brubsby-nixpkgs-yafu}/pkgs/by-name/ya/yafu/package.nix" {
     enableAvx2 = true;
@@ -110,6 +102,17 @@ in
   # Enable sound with pipewire.
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;
+  security.sudo.extraRules = [
+    {
+      users = [ "tbusby" ];
+      commands = [
+        {
+          command = "/run/current-system/sw/bin/nixos-rebuild";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+    }
+  ];
   services.pipewire = {
     enable = true;
     alsa.enable = true;
@@ -249,10 +252,9 @@ in
     # office
     beancount
     # ai
-    gemini
+    gemini-cli-bin
     gemini-nightly
     gemini-preview
-    gemini-latest
     opencode
     qwen
     # math

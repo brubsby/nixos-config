@@ -494,6 +494,9 @@ EOF
             
           # Apply to Plasma
           ${pkgs.kdePackages.plasma-workspace}/bin/plasma-apply-wallpaperimage "$WP_FILE"
+
+          # Apply to Lock Screen
+          ${pkgs.kdePackages.kconfig}/bin/kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group org.kde.image --group General --key Image "file://$WP_FILE"
         else
           echo "Today's APOD is not an image ($MEDIA_TYPE). Skipping update."
         fi
