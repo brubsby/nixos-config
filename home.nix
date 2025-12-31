@@ -358,7 +358,7 @@ EOF
         normal = {
           family = "Termsyn";
         };
-        size = 10.5;
+        size = 9.75;
       };
 
       window = {
@@ -415,14 +415,28 @@ EOF
 
   xdg.configFile."zellij/config.kdl".force = true;
 
+  fonts.fontconfig.enable = true;
+  xdg.configFile."fontconfig/conf.d/99-alacritty-fallback.conf".text = ''
+    <?xml version="1.0"?>
+    <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+    <fontconfig>
+      <alias>
+        <family>Termsyn</family>
+        <prefer>
+          <family>Termsyn</family>
+          <family>Cozette</family>
+        </prefer>
+      </alias>
+    </fontconfig>
+  '';
+
   programs.konsole = {
     enable = true;
     defaultProfile = "tbusby";
     profiles.tbusby = {
       colorScheme = "Breeze";
       font = {
-        name = "Hack";
-        size = 12;
+	size = 9.75;
       };
     };
     extraConfig = {
