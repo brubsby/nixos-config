@@ -128,6 +128,8 @@ in
 
   services.fprintd.enable = true;
 
+  virtualisation.docker.enable = true;
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.tbusby = {
     isNormalUser = true;
@@ -135,6 +137,7 @@ in
     extraGroups = [
       "networkmanager"
       "wheel"
+      "docker"
     ];
     hashedPasswordFile = config.sops.secrets.tbusby_password.path;
     packages = with pkgs; [
@@ -174,6 +177,21 @@ in
     system = "x86_64-linux";
   };
 
+  fonts.fontDir.enable = true;
+  fonts.packages = with pkgs; [
+    hack-font
+    jetbrains-mono
+    fira-code
+    source-code-pro
+    iosevka
+    terminus_font_ttf
+    gohufont
+    cozette
+    fixedsys-excelsior
+    dina-font
+    termsyn
+  ];
+
   programs.steam = {
     enable = true;
     localNetworkGameTransfers.openFirewall = true;
@@ -191,6 +209,7 @@ in
     # tui
     discordo
     # cli
+    alacritty
     leetcode-cli
     dropbox-cli
     # linux
@@ -199,6 +218,7 @@ in
     fastfetch
     bat
     jq
+    ripgrep
     unzip
     # nix
     nix-search-cli
@@ -218,6 +238,7 @@ in
     uv
      #js
     nodejs
+    typescript
     prettier
      #rust
     cargo
@@ -235,7 +256,10 @@ in
     opencode
     qwen
     # math
+    sage
     pari
+    wolfram-engine
+    maxima
     ecm
     mprime
     yafu
@@ -325,6 +349,9 @@ in
         owner = "tbusby";
       };
       discord_token = {
+        owner = "tbusby";
+      };
+      nasa_token = {
         owner = "tbusby";
       };
       huckleberry_email = {

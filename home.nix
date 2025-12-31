@@ -11,7 +11,6 @@ in
   home.packages = [
     pkgs.todo-txt-cli
     pkgs.snapshot
-    pkgs.hack-font
   ];
 
   home.sessionVariables = {
@@ -81,11 +80,18 @@ in
       luasnip
       cmp_luasnip
       rustaceanvim
+      typescript-tools-nvim
       nvim-treesitter.withAllGrammars
       plenary-nvim
       telescope-nvim
     ];
     extraLuaConfig = ''
+      vim.opt.timeoutlen = 300
+      vim.opt.ttimeoutlen = 100
+      vim.opt.lazyredraw = true
+      vim.opt.termguicolors = true
+      vim.opt.scrolloff = 8
+
       local cmp = require('cmp')
       local luasnip = require('luasnip')
 
@@ -189,6 +195,16 @@ in
         highlight = {
           enable = true,
         },
+      })
+
+      -- TypeScript/JavaScript LSP
+      require("typescript-tools").setup({
+        on_attach = function(client, bufnr)
+          local opts = { buffer = bufnr }
+          vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+          vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+          vim.keymap.set('n', '<leader>a', vim.lsp.buf.code_action, opts)
+        end,
       })
 
       -- ty LSP (Neovim 0.11+)
@@ -325,11 +341,79 @@ EOF
 
   programs.zellij = {
     enable = true;
-    enableZshIntegration = true;
+    enableZshIntegration = false;
     settings = {
       theme = "dracula";
+      stacked_resize = false;
+      copy_on_select = true;
+      mirror_session = false;
+      pane_frames = true;
     };
   };
+
+  programs.alacritty = {
+    enable = true;
+    settings = {
+      font = {
+        normal = {
+          family = "Termsyn";
+        };
+        size = 10.5;
+      };
+
+      window = {
+        opacity = 1;
+        padding = {
+          x = 0;
+          y = 0;
+        };
+      };
+      # Make sure it works well with Zellij
+      env = {
+        TERM = "xterm-256color";
+      };
+      colors = {
+        primary = {
+          background = "#232627";
+          foreground = "#fcfcfc";
+          dim_foreground = "#eff0f1";
+          bright_foreground = "#ffffff";
+        };
+        normal = {
+          black = "#232627";
+          red = "#ed1515";
+          green = "#11d116";
+          yellow = "#f67400";
+          blue = "#1d99f3";
+          magenta = "#9b59b6";
+          cyan = "#1abc9c";
+          white = "#fcfcfc";
+        };
+        bright = {
+          black = "#7f8c8d";
+          red = "#c0392b";
+          green = "#1cdc9a";
+          yellow = "#fdbc4b";
+          blue = "#3daee9";
+          magenta = "#8e44ad";
+          cyan = "#16a085";
+          white = "#ffffff";
+        };
+        dim = {
+          black = "#31363b";
+          red = "#783228";
+          green = "#17a262";
+          yellow = "#9e5c00";
+          blue = "#1464a5";
+          magenta = "#78498f";
+          cyan = "#107a64";
+          white = "#9da2a6";
+        };
+      };
+    };
+  };
+
+  xdg.configFile."zellij/config.kdl".force = true;
 
   programs.konsole = {
     enable = true;
@@ -347,6 +431,76 @@ EOF
         ShowMainToolBar = false;
         ShowSessionToolBar = false;
       };
+    };
+  };
+
+  # Daily Monochrome NASA APOD Wallpaper
+  systemd.user.services.daily-wallpaper = {
+    Unit = {
+      Description = "Fetch daily monochrome NASA APOD wallpaper";
+      After = [ "network-online.target" ];
+      Wants = [ "network-online.target" ];
+    };
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.writeShellScript "update-wallpaper" ''
+        # Create cache dir
+        mkdir -p $HOME/.cache/wallpapers
+        
+        # Get NASA API Key from SOPS
+        NASA_KEY=$(cat /run/secrets/nasa_token)
+        
+        # Query APOD API
+        API_RESPONSE=$(${pkgs.curl}/bin/curl -s "https://api.nasa.gov/planetary/apod?api_key=$NASA_KEY")
+        
+        # Check if it's an image (sometimes it's a video)
+        MEDIA_TYPE=$(echo "$API_RESPONSE" | ${pkgs.jq}/bin/jq -r '.media_type')
+        
+        if [ "$MEDIA_TYPE" = "image" ]; then
+          IMG_URL=$(echo "$API_RESPONSE" | ${pkgs.jq}/bin/jq -r '.hdurl // .url')
+          
+          # Download
+          ${pkgs.curl}/bin/curl -L "$IMG_URL" -o /tmp/nasa_raw.jpg
+          
+          # Filename with date to bust Plasma cache
+          WP_FILE="$HOME/.cache/wallpapers/nasa-$(date +%Y-%m-%d).jpg"
+          
+          # Clean up old nasa wallpapers
+          rm -f $HOME/.cache/wallpapers/nasa-*.jpg
+          
+          # Resize to fill 1920x1080 (cropping if necessary)
+          ${pkgs.imagemagick}/bin/magick /tmp/nasa_raw.jpg \
+            -resize "1920x1080^" \
+            -gravity center \
+            -extent 1920x1080 \
+            "$WP_FILE"
+            
+          # Update symlink
+          ln -sf "$WP_FILE" $HOME/.cache/wallpapers/current.jpg
+            
+          # Apply to Plasma
+          ${pkgs.kdePackages.plasma-workspace}/bin/plasma-apply-wallpaperimage "$WP_FILE"
+        else
+          echo "Today's APOD is not an image ($MEDIA_TYPE). Skipping update."
+        fi
+      ''}";
+    };
+  };
+
+  systemd.user.timers.daily-wallpaper = {
+    Unit.Description = "Daily NASA wallpaper update timer";
+    Timer = {
+      OnCalendar = "*-*-* 00:05:00";
+      RandomizedDelaySec = "5m";
+      Persistent = true;
+    };
+    Install.WantedBy = [ "timers.target" ];
+  };
+
+  programs.plasma = {
+    enable = true;
+    workspace = {
+      wallpaper = "/home/tbusby/.cache/wallpapers/current.jpg";
     };
   };
 
