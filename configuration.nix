@@ -26,11 +26,11 @@ let
     enableAvx2 = true;
     enableBmi2 = true;
   };
-  brubsbyPkgs = import inputs.brubsby-nixpkgs-local {
+  pfgwPkgs = import inputs.brubsby-nixpkgs-pfgw {
     inherit (pkgs) system;
     config = { allowUnfree = true; };
   };
-  pfgw = brubsbyPkgs.pfgw;
+  pfgw = pfgwPkgs.pfgw;
 in
 {
   imports = [
@@ -54,6 +54,8 @@ in
 
   # Enable networking
   networking.networkmanager.enable = true;
+  # Use iwd backend to fix Wi-Fi disconnects on resume caused by wpa_supplicant's udev restart rule
+  networking.networkmanager.wifi.backend = "iwd";
 
   services.avahi = {
     enable = true;
@@ -131,6 +133,16 @@ in
 
   services.fprintd.enable = true;
 
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [
+      intel-media-driver
+      intel-vaapi-driver
+      libvdpau-va-gl
+      vpl-gpu-rt
+    ];
+  };
+
   virtualisation.docker.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
@@ -145,6 +157,7 @@ in
     hashedPasswordFile = config.sops.secrets.tbusby_password.path;
     packages = with pkgs; [
       kdePackages.kate
+      kdePackages.kolourpaint
       #  thunderbird
     ];
   };
@@ -195,6 +208,8 @@ in
     termsyn
   ];
 
+  documentation.man.generateCaches = true;
+
   programs.steam = {
     enable = true;
     localNetworkGameTransfers.openFirewall = true;
@@ -204,13 +219,16 @@ in
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-    #  wget
+    wget
     # normie
     google-chrome
     vlc
+    zoom-us
+    obs-studio
     obsidian
     # tui
     discordo
+    visidata
     # cli
     alacritty
     leetcode-cli
@@ -218,10 +236,13 @@ in
     # linux
     xclip
     htop
+    btop
     fastfetch
     bat
     jq
     ripgrep
+    fd
+    zip
     unzip
     # nix
     nix-search-cli
@@ -232,6 +253,7 @@ in
     # code
     git
     gh
+    hub
     gcc
     gdb
     gnumake
@@ -251,6 +273,7 @@ in
     rust-analyzer
     # office
     beancount
+    beancount-language-server
     # ai
     gemini-cli-bin
     gemini-nightly
@@ -260,13 +283,24 @@ in
     # math
     sage
     pari
-    wolfram-engine
+    #wolfram-engine
     maxima
+    gap
+    fricas
     ecm
+    primesieve
     mprime
     yafu
-    #pfgw
+    pfgw
     golly
+    # other langs
+    ghc
+    #julia
+    scala
+    guile
+    perl
+    ruby
+    R
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -348,6 +382,9 @@ in
         path = "/home/tbusby/.ssh/id_ed25519";
       };
       github_token = {
+        owner = "tbusby";
+      };
+      pypi_token = {
         owner = "tbusby";
       };
       discord_token = {

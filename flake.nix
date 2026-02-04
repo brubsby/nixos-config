@@ -10,6 +10,7 @@
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     brubsby-nixpkgs-local.url = "path:/home/tbusby/Repos/nixpkgs";
     brubsby-nixpkgs-yafu.url = "github:brubsby/nixpkgs/yafu";
+    brubsby-nixpkgs-pfgw.url = "github:brubsby/nixpkgs/pfgw";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
     nixcord.url = "github:FlameFlag/nixcord";
@@ -51,7 +52,7 @@
               home-manager.backupFileExtension = "backup";
               home-manager.sharedModules = [
                 inputs.nixcord.homeModules.nixcord
-                inputs.plasma-manager.homeManagerModules.plasma-manager
+                inputs.plasma-manager.homeModules.plasma-manager
               ];
             }
           ];
@@ -64,7 +65,7 @@
           modules = [
             ./home.nix
             inputs.nixcord.homeModules.nixcord
-            inputs.plasma-manager.homeManagerModules.plasma-manager
+            inputs.plasma-manager.homeModules.plasma-manager
             {
               nixpkgs.config.allowUnfree = true;
             }

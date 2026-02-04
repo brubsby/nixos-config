@@ -4,6 +4,26 @@ let
     "brubsby/nixpkgs"
     "oeis/oeisdata"
   ];
+
+  cheatsheet = pkgs.writeShellScriptBin "cheatsheet" ''
+    SHEET_FILE="$HOME/.cheatsheet.txt"
+    if [ ! -f "$SHEET_FILE" ]; then
+      touch "$SHEET_FILE"
+    fi
+
+    if [ "$1" = "edit" ]; then
+      exec ''${EDITOR:-vim} "$SHEET_FILE"
+    elif [ "$1" = "add" ]; then
+      shift
+      echo "$*" >> "$SHEET_FILE"
+    else
+      if [ -s "$SHEET_FILE" ]; then
+        cat "$SHEET_FILE"
+      else
+        echo "Cheatsheet is empty. Use 'cheatsheet add <text>' or 'cheatsheet edit' to add content."
+      fi
+    fi
+  '';
 in
 {
   home.username = "tbusby";
@@ -11,6 +31,7 @@ in
   home.packages = [
     pkgs.todo-txt-cli
     pkgs.snapshot
+    cheatsheet
   ];
 
   home.sessionVariables = {
@@ -26,9 +47,11 @@ in
     shellAliases = {
       todo = "todo.sh";
       clip = "xclip -sel clipboard";
+      cliplast = "_c(){ fc -ln -\${1:-1} -\${1:-1} | head -c -1 | clip; unset -f _c; }; _c";
       nixos-switch = "sudo nixos-rebuild switch --flake /etc/nixos#puter";
       nixos-update = "sudo nix flake update --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos#puter";
       nixos-update-local = "sudo nix flake update brubsby-nixpkgs-local --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos#puter";
+      nixos-rollback = "sudo nixos-rebuild switch --rollback";
       home-switch = "home-manager switch --flake /etc/nixos#tbusby";
       nixos-config = "$EDITOR /home/tbusby/Repos/nixos-config/configuration.nix";
       home-config = "$EDITOR /home/tbusby/Repos/nixos-config/home.nix";
@@ -56,6 +79,7 @@ in
       [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
       
       export GITHUB_TOKEN="$(cat /run/secrets/github_token)"
+      export UV_PUBLISH_TOKEN="$(cat /run/secrets/pypi_token)"
       export DISCORDO_TOKEN="$(cat /run/secrets/discord_token)"
       export HUCKLEBERRY_EMAIL="$(cat /run/secrets/huckleberry_email)"
       export HUCKLEBERRY_PASSWORD="$(cat /run/secrets/huckleberry_password)"
@@ -63,6 +87,17 @@ in
       export LEETCODE_SESSION="$(cat /run/secrets/leetcode_credentials/session_key)"
       export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.zlib}/lib:$LD_LIBRARY_PATH"
       export PATH="$HOME/.cargo/bin:$PATH"
+
+      # FZF Configuration
+      export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+      export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+
+      # Rebind fzf file widget to Ctrl+f (overrides forward-char)
+      # and unbind Ctrl+t (Zellij conflict)
+      bindkey '^f' fzf-file-widget
+      bindkey -r '^t'
+
+      ${builtins.readFile ./sink.zsh}
     '';
   };
 
@@ -94,6 +129,9 @@ in
 
       local cmp = require('cmp')
       local luasnip = require('luasnip')
+
+      -- Capabilities for cmp-nvim-lsp
+      local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
       -- Telescope keybinds
       local builtin = require('telescope.builtin')
@@ -191,7 +229,7 @@ in
       }
 
       -- Treesitter
-      require('nvim-treesitter.configs').setup({
+      require('nvim-treesitter.config').setup({
         highlight = {
           enable = true,
         },
@@ -207,8 +245,42 @@ in
         end,
       })
 
+      -- LSP keybinds
+      vim.api.nvim_create_autocmd('LspAttach', {
+        callback = function(args)
+          local opts = { buffer = args.buf }
+          vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+          vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+        end,
+      })
+
       -- ty LSP (Neovim 0.11+)
+      vim.lsp.config('ty', {
+        cmd = { "ty", "server" },
+        filetypes = { "python" },
+        root_markers = { "pyproject.toml", "setup.py", ".git", "requirements.txt" },
+      })
       vim.lsp.enable('ty')
+
+      -- Filetype associations
+      vim.filetype.add({
+        extension = {
+          bean = 'beancount',
+        },
+      })
+
+      -- Beancount LSP (Neovim 0.11+)
+      vim.lsp.config('beancount', {
+        cmd = { "beancount-language-server" },
+        filetypes = { "beancount", "bean" },
+        root_markers = { "main.beancount", "main.bean", ".git" },
+        init_options = {
+          journal_file = "/home/tbusby/Dropbox/Finances/Beancount/main.bean",
+          python3_path = "/run/current-system/sw/bin/python3",
+        },
+        capabilities = capabilities,
+      })
+      vim.lsp.enable('beancount')
     '';
   };
 
@@ -279,7 +351,7 @@ in
     mkdir -p $HOME/.leetcode
     cat <<EOF > $HOME/.leetcode/leetcode.toml
 [code]
-lang = "python"
+lang = "python3"
 editor = "${config.home.sessionVariables.EDITOR}"
 comment_problem_desc = true
 comment_leading = "#"
@@ -324,6 +396,32 @@ EOF
     };
   };
 
+  programs.tealdeer = {
+    enable = true;
+    settings = {
+      updates = {
+        auto_update = true;
+      };
+    };
+  };
+
+  programs.fzf = {
+    enable = true;
+    enableZshIntegration = true;
+  };
+
+  programs.zoxide = {
+    enable = true;
+    enableZshIntegration = true;
+  };
+
+  programs.lazygit.enable = true;
+
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+  };
+
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
@@ -348,6 +446,13 @@ EOF
       copy_on_select = true;
       mirror_session = false;
       pane_frames = true;
+      keybinds = {
+        "shared_except \"locked\"" = {
+          "bind \"Alt PageUp\"" = { GoToPreviousTab = [ ]; };
+          "bind \"Alt PageDown\"" = { GoToNextTab = [ ]; };
+          "unbind \"Ctrl q\"" = [];
+        };
+      };
     };
   };
 
@@ -415,6 +520,11 @@ EOF
 
   xdg.configFile."zellij/config.kdl".force = true;
 
+  xdg.configFile."discordo/config.toml".text = ''
+    [notifications.sound]
+    enabled = false
+  '';
+
   fonts.fontconfig.enable = true;
   xdg.configFile."fontconfig/conf.d/99-alacritty-fallback.conf".text = ''
     <?xml version="1.0"?>
@@ -448,10 +558,10 @@ EOF
     };
   };
 
-  # Daily Monochrome NASA APOD Wallpaper
+  # Daily NASA APOD Wallpaper
   systemd.user.services.daily-wallpaper = {
     Unit = {
-      Description = "Fetch daily monochrome NASA APOD wallpaper";
+      Description = "Fetch daily NASA APOD wallpaper";
       After = [ "network-online.target" ];
       Wants = [ "network-online.target" ];
     };
@@ -462,41 +572,68 @@ EOF
         mkdir -p $HOME/.cache/wallpapers
         
         # Get NASA API Key from SOPS
-        NASA_KEY=$(cat /run/secrets/nasa_token)
+        if [ -f /run/secrets/nasa_token ]; then
+          NASA_KEY=$(cat /run/secrets/nasa_token)
+        else
+          echo "NASA token secret not found. Skipping."
+          exit 1
+        fi
         
         # Query APOD API
-        API_RESPONSE=$(${pkgs.curl}/bin/curl -s "https://api.nasa.gov/planetary/apod?api_key=$NASA_KEY")
-        
-        # Check if it's an image (sometimes it's a video)
-        MEDIA_TYPE=$(echo "$API_RESPONSE" | ${pkgs.jq}/bin/jq -r '.media_type')
+        # --retry 5 helps if the network is still coming up
+        if API_RESPONSE=$(${pkgs.curl}/bin/curl -s --retry 5 --retry-delay 5 --retry-all-errors --fail "https://api.nasa.gov/planetary/apod?api_key=$NASA_KEY"); then
+          MEDIA_TYPE=$(echo "$API_RESPONSE" | ${pkgs.jq}/bin/jq -r '.media_type')
+          if [ "$MEDIA_TYPE" = "image" ]; then
+            IMG_URL=$(echo "$API_RESPONSE" | ${pkgs.jq}/bin/jq -r '.hdurl // .url')
+          fi
+        else
+          echo "Failed to query APOD API after retries. Falling back to scraping website."
+          HTML=$(${pkgs.curl}/bin/curl -s https://apod.nasa.gov/apod/astropix.html)
+          IMG_PATH=$(echo "$HTML" | ${pkgs.gnugrep}/bin/grep -oP 'href="image/[^"]+\.(jpg|png|gif)"' | ${pkgs.coreutils}/bin/head -1 | ${pkgs.coreutils}/bin/cut -d'"' -f2)
+          if [ -n "$IMG_PATH" ]; then
+            IMG_URL="https://apod.nasa.gov/apod/$IMG_PATH"
+            MEDIA_TYPE="image"
+          else
+            if echo "$HTML" | ${pkgs.gnugrep}/bin/grep -q "youtube\.com/embed"; then
+              MEDIA_TYPE="video"
+            else
+              echo "Failed to parse APOD website. Skipping update."
+              exit 0
+            fi
+          fi
+        fi
         
         if [ "$MEDIA_TYPE" = "image" ]; then
-          IMG_URL=$(echo "$API_RESPONSE" | ${pkgs.jq}/bin/jq -r '.hdurl // .url')
-          
           # Download
-          ${pkgs.curl}/bin/curl -L "$IMG_URL" -o /tmp/nasa_raw.jpg
-          
-          # Filename with date to bust Plasma cache
-          WP_FILE="$HOME/.cache/wallpapers/nasa-$(date +%Y-%m-%d).jpg"
-          
-          # Clean up old nasa wallpapers
-          rm -f $HOME/.cache/wallpapers/nasa-*.jpg
-          
-          # Resize to fill 1920x1080 (cropping if necessary)
-          ${pkgs.imagemagick}/bin/magick /tmp/nasa_raw.jpg \
-            -resize "1920x1080^" \
-            -gravity center \
-            -extent 1920x1080 \
-            "$WP_FILE"
+          if ${pkgs.curl}/bin/curl -L --retry 3 "$IMG_URL" -o /tmp/nasa_raw.jpg; then
+            # Filename with date to bust Plasma cache
+            WP_FILE="$HOME/.cache/wallpapers/nasa-$(date +%Y-%m-%d).jpg"
             
-          # Update symlink
-          ln -sf "$WP_FILE" $HOME/.cache/wallpapers/current.jpg
+            # Clean up old nasa wallpapers
+            rm -f $HOME/.cache/wallpapers/nasa-*.jpg
             
-          # Apply to Plasma
-          ${pkgs.kdePackages.plasma-workspace}/bin/plasma-apply-wallpaperimage "$WP_FILE"
+            # Resize to fill 1920x1080 (cropping if necessary)
+            ${pkgs.imagemagick}/bin/magick /tmp/nasa_raw.jpg \
+              -resize "1920x1080^" \
+              -gravity center \
+              -extent 1920x1080 \
+              "$WP_FILE"
+              
+            # Update symlink
+            ln -sf "$WP_FILE" $HOME/.cache/wallpapers/current.jpg
+              
+            # Apply to Plasma
+            ${pkgs.kdePackages.plasma-workspace}/bin/plasma-apply-wallpaperimage "$HOME/.cache/wallpapers/current.jpg"
 
-          # Apply to Lock Screen
-          ${pkgs.kdePackages.kconfig}/bin/kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group org.kde.image --group General --key Image "file://$WP_FILE"
+            # Apply to Lock Screen
+            ${pkgs.kdePackages.kconfig}/bin/kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group org.kde.image --group General --key Image "file://$HOME/.cache/wallpapers/current.jpg"
+          else
+             echo "Failed to download image from $IMG_URL. Skipping."
+             exit 0
+          fi
+        elif [ "$MEDIA_TYPE" = "null" ] || [ -z "$MEDIA_TYPE" ]; then
+             echo "Failed to parse API response or media_type missing. Skipping. Response was: $API_RESPONSE"
+             exit 0
         else
           echo "Today's APOD is not an image ($MEDIA_TYPE). Skipping update."
         fi
