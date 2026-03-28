@@ -42,13 +42,18 @@
           inherit system;
           specialArgs = { inherit inputs; };
           modules = [
-            ./configuration.nix
+            ./hosts/puter/default.nix
             home-manager.nixosModules.home-manager
             sops-nix.nixosModules.sops
             {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
-              home-manager.users.tbusby = import ./home.nix;
+              home-manager.users.tbusby = {
+                imports = [
+                  ./modules/home/common.nix
+                  ./modules/home/desktop.nix
+                ];
+              };
               home-manager.backupFileExtension = "backup";
               home-manager.sharedModules = [
                 inputs.nixcord.homeModules.nixcord
@@ -57,15 +62,48 @@
             }
           ];
         };
+
+        headless = nixpkgs.lib.nixosSystem {
+          inherit system;
+          specialArgs = { inherit inputs; };
+          modules = [
+            ./hosts/headless/default.nix
+            home-manager.nixosModules.home-manager
+            sops-nix.nixosModules.sops
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.tbusby = {
+                imports = [
+                  ./modules/home/common.nix
+                ];
+              };
+              home-manager.backupFileExtension = "backup";
+            }
+          ];
+        };
       };
 
       homeConfigurations = {
+        # Desktop user configuration
         tbusby = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
           modules = [
-            ./home.nix
+            ./modules/home/common.nix
+            ./modules/home/desktop.nix
             inputs.nixcord.homeModules.nixcord
             inputs.plasma-manager.homeModules.plasma-manager
+            {
+              nixpkgs.config.allowUnfree = true;
+            }
+          ];
+        };
+        
+        # Headless user configuration
+        tbusby-headless = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [
+            ./modules/home/common.nix
             {
               nixpkgs.config.allowUnfree = true;
             }

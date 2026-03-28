@@ -291,8 +291,12 @@ in
     enableDefaultConfig = false;
     matchBlocks = {
       "basement" = {
-        hostname = "bub-ucs240m5";
+        hostname = "basement";
         user = "tbusby";
+      };
+      "basement-management" = {
+        hostname = "c240-wzp23290kkn";
+        user = "admin";
       };
     };
   };

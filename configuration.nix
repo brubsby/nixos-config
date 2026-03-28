@@ -258,6 +258,7 @@ in
     gdb
     gnumake
     ty
+    sqlite
      #python
     python3
     uv
@@ -275,13 +276,14 @@ in
     beancount
     beancount-language-server
     # ai
+    claude-code-bin
     gemini-cli-bin
     gemini-nightly
     gemini-preview
     opencode
     qwen
     # math
-    sage
+    #sage
     pari
     #wolfram-engine
     maxima
@@ -335,10 +337,14 @@ in
       ];
       publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHgHVy2geZWDIdDlqk8BWBFAh8jm/wZjKBUdND8ih/8Q";
     };
+    "c240-wzp23290kkn" = {
+      hostNames = [ "c240-wzp23290kkn" "c240-wzp23290kkn.lan" ];
+      publicKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDSWv0Y94G1vffCtT9ySkrX3XeEhLG6RZQ416vpteQodfCLEn9RkM8bAVP2P2Dk4AulEVgSzfp3MZB/SciuDS5jUW9Gtk/B6VrbBESR+TXmMSY0prjXuTTozRfhHRBiYqfowiIrnXx4N7HG0uyc/lVeMxcyIlw2xlho6p4HZYapbrYeF+PJENG3jUrTWvwI8tQrSoBchhebzOK/Yui4spfp7gAT2Exyem3J2JpHUhwi1NyFRz/oE7xNTgIU+W/QjK8yPvwAXp/foTMilAfIGwUJqDMxHPAYxBtS4d2XKnoSNDXthv8sIMAQLY9C3DqeedRChtidzFCK3a6BNxcFAXoRnGKHL+maDuXxNIWaboXlFUtuE+CQQ0Y23m3iUGCz9KLhYuwlLzDAKvMeq6hoPVo6LFpR3zESvloYE9XogZgUpMh7k43AG0CtKVBxOZ8VvHfJIAYvAjC6QpF7zgnvEPBQs1oFHi1Y1LhZmq/qIywTenXY/7o7nuM6X5nHOYlcyfU=";
+    };
   };
 
   # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
+  networking.firewall.allowedTCPPorts = [ 5000 ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
