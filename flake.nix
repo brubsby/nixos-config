@@ -19,6 +19,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
+    claude-code.url = "github:sadjow/claude-code-nix";
   };
 
   outputs =
@@ -39,7 +40,6 @@
     {
       nixosConfigurations = {
         puter = nixpkgs.lib.nixosSystem {
-          inherit system;
           specialArgs = { inherit inputs; };
           modules = [
             ./hosts/puter/default.nix
@@ -64,7 +64,6 @@
         };
 
         headless = nixpkgs.lib.nixosSystem {
-          inherit system;
           specialArgs = { inherit inputs; };
           modules = [
             ./hosts/headless/default.nix

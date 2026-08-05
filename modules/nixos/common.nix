@@ -12,7 +12,16 @@ let
     export npm_config_yes=true
     exec ${pkgs.nodejs}/bin/npx @qwen-code/qwen-code@latest "$@"
   '';
-  yafu = pkgs.callPackage "${inputs.brubsby-nixpkgs-yafu}/pkgs/by-name/ya/yafu/package.nix" {
+  yafu = let
+    # Upstream package.nix has a bug: declares makeBinaryWrapper but uses makeWrapper in body.
+    # Fix by replacing the broken reference in nativeBuildInputs.
+    fixedPkg = pkgs.writeText "yafu-fixed.nix" (
+      builtins.replaceStrings
+        [ "    makeWrapper\n" ]
+        [ "    makeBinaryWrapper\n" ]
+        (builtins.readFile "${inputs.brubsby-nixpkgs-yafu}/pkgs/by-name/ya/yafu/package.nix")
+    );
+  in pkgs.callPackage fixedPkg {
     enableAvx2 = true;
     enableBmi2 = true;
   };
@@ -100,11 +109,9 @@ in
     options = "--delete-older-than 7d";
   };
 
-  nixpkgs.hostPlatform = {
-    system = "x86_64-linux";
-  };
+  nixpkgs.hostPlatform = "x86_64-linux";
 
-  documentation.man.generateCaches = true;
+  documentation.man.cache.enable = true;
 
   environment.systemPackages = with pkgs; [
     wget
@@ -144,7 +151,7 @@ in
     rust-analyzer
     beancount
     beancount-language-server
-    claude-code-bin
+    inputs.claude-code.packages.${pkgs.system}.claude-code
     gemini-cli-bin
     gemini-nightly
     gemini-preview

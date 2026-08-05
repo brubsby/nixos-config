@@ -67,6 +67,7 @@
     profiles.tbusby = {
       colorScheme = "Breeze";
       font = {
+	name = "Termsyn";
 	size = 9.75;
       };
     };
@@ -82,6 +83,7 @@
   programs.nixcord = {
     enable = true;
     discord.enable = true;
+    discord.vencord.enable = true;
     vesktop.enable = true;
   };
 

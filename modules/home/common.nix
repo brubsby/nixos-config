@@ -57,6 +57,7 @@ in
       home-config = "$EDITOR /home/tbusby/Repos/nixos-config/home.nix";
       flake-config = "$EDITOR /home/tbusby/Repos/nixos-config/flake.nix";
       beancount = "cd ~/Dropbox/Finances/Beancount && ./beancount_reference.sh";
+      dclaude = "claude --dangerously-skip-permissions";
       gs = "git status";
       gsv = "git status -v";
       gsvv = "git status -v -v";
@@ -120,7 +121,9 @@ in
       plenary-nvim
       telescope-nvim
     ];
-    extraLuaConfig = ''
+    withRuby = false;
+    withPython3 = false;
+    initLua = ''
       vim.opt.timeoutlen = 300
       vim.opt.ttimeoutlen = 100
       vim.opt.lazyredraw = true
@@ -290,7 +293,7 @@ in
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    matchBlocks = {
+    settings = {
       "basement" = {
         hostname = "bub-ucs240m5";
         user = "tbusby";
