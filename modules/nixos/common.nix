@@ -64,6 +64,17 @@ in
     openFirewall = true;
   };
 
+  services.tailscale = {
+    enable = true;
+    openFirewall = true;
+  };
+
+  # Python's ssl module has no built-in CA bundle, so anything using urllib or
+  # requests fails with CERTIFICATE_VERIFY_FAILED unless it is pointed at the
+  # system store. curl has its path compiled in, which is why this only shows up
+  # once you write a script.
+  environment.variables.SSL_CERT_FILE = "/etc/ssl/certs/ca-bundle.crt";
+
   security.sudo.extraRules = [
     {
       users = [ "tbusby" ];
