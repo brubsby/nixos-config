@@ -49,7 +49,9 @@
     jetbrains-mono
     fira-code
     source-code-pro
-    iosevka
+    # iosevka builds from source via nodejs_26, which has no binary cache
+    # (a ~2h V8 compile); iosevka-bin is the upstream prebuilt release.
+    iosevka-bin
     terminus_font_ttf
     gohufont
     cozette
