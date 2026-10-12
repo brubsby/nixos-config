@@ -54,7 +54,7 @@ in
       nixos-rollback = "sudo nixos-rebuild switch --rollback";
       home-switch = "home-manager switch --flake /etc/nixos#tbusby";
       nixos-config = "$EDITOR /home/tbusby/Repos/nixos-config/configuration.nix";
-      home-config = "$EDITOR /home/tbusby/Repos/nixos-config/home.nix";
+      home-config = "$EDITOR /home/tbusby/Repos/nixos-config/modules/home/common.nix";
       flake-config = "$EDITOR /home/tbusby/Repos/nixos-config/flake.nix";
       beancount = "cd ~/Dropbox/Finances/Beancount && ./beancount_reference.sh";
       dclaude = "claude --dangerously-skip-permissions";
