@@ -255,9 +255,6 @@ in
       discord_token = {
         owner = "tbusby";
       };
-      nasa_token = {
-        owner = "tbusby";
-      };
       huckleberry_email = {
         owner = "tbusby";
       };
