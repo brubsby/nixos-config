@@ -126,41 +126,28 @@
         # Create cache dir
         mkdir -p $HOME/.cache/wallpapers
         
-        # Get NASA API Key from SOPS
-        if [ -f /run/secrets/nasa_token ]; then
-          NASA_KEY=$(cat /run/secrets/nasa_token)
-        else
-          echo "NASA token secret not found. Skipping."
-          exit 1
+        # APOD moved to science.nasa.gov/apod (the old apod.nasa.gov pages
+        # redirect there) and api.nasa.gov/planetary/apod hangs, so scrape the
+        # page. Today's media sits in the media-detail-hero block; an image's
+        # src is a resized "dynamicimage" rendition, and the same path under
+        # content/dam is the full-size original.
+        # --retry helps if the network is still coming up.
+        if ! HTML=$(${pkgs.curl}/bin/curl -sL --fail --max-time 60 --retry 5 --retry-delay 5 --retry-all-errors https://science.nasa.gov/apod/); then
+          echo "Failed to fetch APOD page after retries. Skipping update."
+          exit 0
         fi
-        
-        # Query APOD API
-        # --retry 5 helps if the network is still coming up
-        if API_RESPONSE=$(${pkgs.curl}/bin/curl -s --retry 5 --retry-delay 5 --retry-all-errors --fail "https://api.nasa.gov/planetary/apod?api_key=$NASA_KEY"); then
-          MEDIA_TYPE=$(echo "$API_RESPONSE" | ${pkgs.jq}/bin/jq -r '.media_type')
-          if [ "$MEDIA_TYPE" = "image" ]; then
-            IMG_URL=$(echo "$API_RESPONSE" | ${pkgs.jq}/bin/jq -r '.hdurl // .url')
-          fi
-        else
-          echo "Failed to query APOD API after retries. Falling back to scraping website."
-          HTML=$(${pkgs.curl}/bin/curl -s https://apod.nasa.gov/apod/astropix.html)
-          IMG_PATH=$(echo "$HTML" | ${pkgs.gnugrep}/bin/grep -oP 'href="image/[^"]+\.(jpg|png|gif)"' | ${pkgs.coreutils}/bin/head -1 | ${pkgs.coreutils}/bin/cut -d'"' -f2)
-          if [ -n "$IMG_PATH" ]; then
-            IMG_URL="https://apod.nasa.gov/apod/$IMG_PATH"
-            MEDIA_TYPE="image"
-          else
-            if echo "$HTML" | ${pkgs.gnugrep}/bin/grep -q "youtube\.com/embed"; then
-              MEDIA_TYPE="video"
-            else
-              echo "Failed to parse APOD website. Skipping update."
-              exit 0
-            fi
-          fi
+        HERO=$(echo "$HTML" | ${pkgs.gnugrep}/bin/grep -A5 'media-detail-hero__media' | ${pkgs.coreutils}/bin/tr '\n' ' ')
+        IMG_SRC=$(echo "$HERO" | ${pkgs.gnugrep}/bin/grep -oP '<img[^>]*\bsrc="\K[^"]+' | ${pkgs.coreutils}/bin/head -1)
+        if [ -n "$IMG_SRC" ]; then
+          IMG_URL=$(echo "$IMG_SRC" | ${pkgs.gnused}/bin/sed -e 's/?.*//' -e 's#/dynamicimage/assets/#/content/dam/#')
+          MEDIA_TYPE="image"
+        elif echo "$HERO" | ${pkgs.gnugrep}/bin/grep -qiE '<(iframe|video)'; then
+          MEDIA_TYPE="video"
         fi
-        
+
         if [ "$MEDIA_TYPE" = "image" ]; then
           # Download
-          if ${pkgs.curl}/bin/curl -L --retry 3 "$IMG_URL" -o /tmp/nasa_raw.jpg; then
+          if ${pkgs.curl}/bin/curl -sSL --fail --retry 3 "$IMG_URL" -o /tmp/nasa_raw.jpg; then
             # Filename with date to bust Plasma cache
             WP_FILE="$HOME/.cache/wallpapers/nasa-$(date +%Y-%m-%d).jpg"
             
@@ -186,8 +173,8 @@
              echo "Failed to download image from $IMG_URL. Skipping."
              exit 0
           fi
-        elif [ "$MEDIA_TYPE" = "null" ] || [ -z "$MEDIA_TYPE" ]; then
-             echo "Failed to parse API response or media_type missing. Skipping. Response was: $API_RESPONSE"
+        elif [ -z "$MEDIA_TYPE" ]; then
+             echo "Failed to find today's media on the APOD page. Skipping update."
              exit 0
         else
           echo "Today's APOD is not an image ($MEDIA_TYPE). Skipping update."
