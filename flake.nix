@@ -63,6 +63,30 @@
           ];
         };
 
+        bubtop = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs; };
+          modules = [
+            ./hosts/bubtop/default.nix
+            home-manager.nixosModules.home-manager
+            sops-nix.nixosModules.sops
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.tbusby = {
+                imports = [
+                  ./modules/home/common.nix
+                  ./modules/home/desktop.nix
+                ];
+              };
+              home-manager.backupFileExtension = "backup";
+              home-manager.sharedModules = [
+                inputs.nixcord.homeModules.nixcord
+                inputs.plasma-manager.homeModules.plasma-manager
+              ];
+            }
+          ];
+        };
+
         headless = nixpkgs.lib.nixosSystem {
           specialArgs = { inherit inputs; };
           modules = [

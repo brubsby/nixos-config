@@ -4,3 +4,4 @@ creation_rules:
       - age:
           - age1a6ehecswnq8wacwqc5yyqflvxk22zqzqzestzelpszlcmh9tq98sr27ssy
           - age1tenja6e4py9un7lqpxcccrdpf42mxhnlgg57gmhpfg2k378w23dsut8npa
+          - age1pmw0wh59s63d6evshpm2p9dzd8756pytupr0jvus6yqz7hckkpfsm6qlj6  # bubtop (ssh host key)
