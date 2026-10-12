@@ -82,6 +82,8 @@
   users.users.tbusby.packages = with pkgs; [
     kdePackages.kate
     kdePackages.kolourpaint
+    # GTNH client; bundles jdk8/17/21/25. Use the pack's Java 17+ build on Java 21.
+    prismlauncher
   ];
 
   environment.systemPackages = with pkgs; [
