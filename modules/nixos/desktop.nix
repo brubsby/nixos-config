@@ -22,6 +22,20 @@
     pulse.enable = true;
   };
 
+  # Kill the runaway process before the kernel OOM killer does. A kernel OOM
+  # kill inside a terminal's app-*.service makes systemd stop the whole unit,
+  # taking alacritty and zellij down with the offending child.
+  services.earlyoom = {
+    enable = true;
+    enableNotifications = true;
+    extraArgs = [
+      "--avoid"
+      "^(alacritty|zellij|plasmashell|kwin_wayland|kwin_x11|Xwayland|sddm|sshd|systemd)$"
+    ];
+  };
+  # Backstop for kernel OOM kills that still happen: lose the child, keep the unit.
+  systemd.user.settings.Manager.DefaultOOMPolicy = "continue";
+
   services.fprintd.enable = true;
 
   # Enable fingerprint auth for sudo via PAM
