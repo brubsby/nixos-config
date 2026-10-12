@@ -52,7 +52,7 @@ If you are on a new machine and need to edit secrets:
 
 ### Accessing Secrets in Config
 
-In `configuration.nix`:
+In `modules/nixos/common.nix`:
 
 ```nix
 sops.secrets.my_secret = {
