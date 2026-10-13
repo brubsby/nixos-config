@@ -2,6 +2,7 @@
 # Claude Code status line - styled after Powerlevel10k Pure theme
 
 input=$(cat)
+printf "%s" "$input" > "$HOME/.claude/cache/statusline-input.json" 2>/dev/null
 
 cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd // empty')
 model=$(echo "$input" | jq -r '.model.display_name // empty')
