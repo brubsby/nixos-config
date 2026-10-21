@@ -58,6 +58,20 @@ in
   networking.networkmanager.enable = true;
   networking.networkmanager.wifi.backend = "iwd";
 
+  # Without resolved, NetworkManager and tailscaled take turns writing
+  # /etc/resolv.conf. Joining a captive-portal network, tailscaled could
+  # snapshot it before DHCP delivered a nameserver and forward non-tailnet
+  # names nowhere, so the portal never loaded. With resolved, tailscaled
+  # registers only the tailnet domain on tailscale0 and every other name goes
+  # to the current link's DNS.
+  services.resolved = {
+    enable = true;
+    settings.Resolve.MulticastDNS = false; # avahi owns mDNS
+  };
+  networking.networkmanager.dns = "systemd-resolved";
+  # Lets NetworkManager notice captive portals so Plasma prompts to log in.
+  networking.networkmanager.settings.connectivity.uri = "http://nmcheck.gnome.org/check_network_status.txt";
+
   services.avahi = {
     enable = true;
     nssmdns4 = true;
